@@ -1,5 +1,7 @@
 package be.nabu.libs.artifacts;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -18,12 +20,37 @@ public class ArtifactResolverFactory {
 	
 	private List<ArtifactResolver<?>> resolvers = new ArrayList<ArtifactResolver<?>>();
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public ArtifactResolver<?> getResolver() {
 		if (resolvers.isEmpty()) {
-			ServiceLoader<ArtifactResolver> serviceLoader = ServiceLoader.load(ArtifactResolver.class);
-			for (ArtifactResolver<?> resolver : serviceLoader)
-				resolvers.add(resolver);
+			try {
+				// let's try this with custom service loading based on a configuration
+				Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass("be.nabu.utils.services.ServiceLoader");
+				Method declaredMethod = clazz.getDeclaredMethod("load", Class.class);
+				resolvers.addAll((List<ArtifactResolver<?>>) declaredMethod.invoke(null, ArtifactResolver.class));
+			}
+			catch (ClassNotFoundException e) {
+				// ignore, the framework is not present
+			}
+			catch (NoSuchMethodException e) {
+				// corrupt framework?
+				throw new RuntimeException(e);
+			}
+			catch (SecurityException e) {
+				throw new RuntimeException(e);
+			}
+			catch (IllegalAccessException e) {
+				// ignore
+			}
+			catch (InvocationTargetException e) {
+				// ignore
+			}
+			if (resolvers.isEmpty()) {
+				ServiceLoader<ArtifactResolver> serviceLoader = ServiceLoader.load(ArtifactResolver.class);
+				for (ArtifactResolver<?> resolver : serviceLoader) {
+					resolvers.add(resolver);
+				}
+			}
 		}
 		return new MultipleArtifactResolver(resolvers);
 	}
