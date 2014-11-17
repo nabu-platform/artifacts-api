@@ -25,7 +25,7 @@ public class ArtifactResolverFactory {
 		if (resolvers.isEmpty()) {
 			try {
 				// let's try this with custom service loading based on a configuration
-				Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass("be.nabu.utils.services.ServiceLoader");
+				Class<?> clazz = getClass().getClassLoader().loadClass("be.nabu.utils.services.ServiceLoader");
 				Method declaredMethod = clazz.getDeclaredMethod("load", Class.class);
 				resolvers.addAll((List<ArtifactResolver<?>>) declaredMethod.invoke(null, ArtifactResolver.class));
 			}
