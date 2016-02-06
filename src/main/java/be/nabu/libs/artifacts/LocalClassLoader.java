@@ -85,22 +85,19 @@ abstract public class LocalClassLoader extends ClassLoader {
 			if (failed.contains(name)) {
 				return recurse ? getParent().loadClass(name) : null;
 			}
-			synchronized(failed) {
-				if (failed.contains(name)) {
-					return recurse ? getParent().loadClass(name) : null;
-				}
-				else {
+			else {
+				synchronized(failed) {
 					failed.add(name);
-					// first search locally (allow different versions of shared libraries)
-					try {
-						clazz = findClass(name);
-					}
-					catch (ClassNotFoundException e) {
-						// not found, try parent
-					}
-					if (clazz == null && recurse) {
-						clazz = getParent().loadClass(name);
-					}
+				}
+				// first search locally (allow different versions of shared libraries)
+				try {
+					clazz = findClass(name);
+				}
+				catch (ClassNotFoundException e) {
+					// not found, try parent
+				}
+				if (clazz == null && recurse) {
+					clazz = getParent().loadClass(name);
 				}
 			}
 		}
