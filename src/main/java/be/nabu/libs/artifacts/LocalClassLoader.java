@@ -33,6 +33,10 @@ import java.util.UUID;
 abstract public class LocalClassLoader extends ClassLoader {
 
 	private static boolean registered;
+
+	static {
+		ClassLoader.registerAsParallelCapable();
+	}
 	
 	public static void register() {
 		if (!registered) {
@@ -79,32 +83,34 @@ abstract public class LocalClassLoader extends ClassLoader {
 		if (name.startsWith("java.") || name.startsWith("com.sun.") || name.startsWith("javax.") || name.startsWith("sun.")) {
 			return recurse ? getParent().loadClass(name) : null;
 		}
-		Class<?> clazz = findLoadedClass(name);
-		if (clazz == null) {
-			// non-synchronized lookup
-			if (failed.contains(name)) {
-				return recurse ? getParent().loadClass(name) : null;
+		synchronized (getClassLoadingLock(name)) {
+			Class<?> clazz = findLoadedClass(name);
+			if (clazz == null) {
+				// non-synchronized lookup
+				if (failed.contains(name)) {
+					return recurse ? getParent().loadClass(name) : null;
+				}
+				else {
+					synchronized(failed) {
+						failed.add(name);
+					}
+					// first search locally (allow different versions of shared libraries)
+					try {
+						clazz = findClass(name);
+					}
+					catch (ClassNotFoundException e) {
+						// not found, try parent
+					}
+					if (clazz == null && recurse) {
+						clazz = getParent().loadClass(name);
+					}
+				}
 			}
-			else {
-				synchronized(failed) {
-					failed.add(name);
-				}
-				// first search locally (allow different versions of shared libraries)
-				try {
-					clazz = findClass(name);
-				}
-				catch (ClassNotFoundException e) {
-					// not found, try parent
-				}
-				if (clazz == null && recurse) {
-					clazz = getParent().loadClass(name);
-				}
+			if (clazz != null && resolve) {
+				resolveClass(clazz);
 			}
+			return clazz;
 		}
-		if (clazz != null && resolve) {
-			resolveClass(clazz);
-		}
-		return clazz;
 	}
 	
 	@Override
