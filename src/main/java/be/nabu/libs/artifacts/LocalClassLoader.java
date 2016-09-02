@@ -121,6 +121,13 @@ abstract public class LocalClassLoader extends ClassLoader {
 			throw new ClassNotFoundException("Could not find " + name);
 		}
 		else {
+			int index = name.lastIndexOf('.');
+			if (index >= 0) {
+				String packageName = name.substring(0, index);
+				if (getPackage(packageName) == null) {
+					definePackage(packageName, null, null, null, null, null, null, null);
+				}
+			}
 			return defineClass(name, content, 0, content.length);
 		}
 	}
@@ -213,4 +220,5 @@ abstract public class LocalClassLoader extends ClassLoader {
 			return null;
 		}
 	}
+	
 }
