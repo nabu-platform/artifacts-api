@@ -33,6 +33,7 @@ import java.util.UUID;
 abstract public class LocalClassLoader extends ClassLoader {
 
 	private static boolean registered;
+	private List<String> resourceWhitelist, resourceBlacklist;
 
 	static {
 		ClassLoader.registerAsParallelCapable();
@@ -146,6 +147,30 @@ abstract public class LocalClassLoader extends ClassLoader {
 	
 	final public Collection<URL> findResourcesNonRecursively(String name, boolean stopAfterFirst) {
 		List<URL> urls = new ArrayList<URL>();
+		if (resourceWhitelist != null && !resourceWhitelist.isEmpty()) {
+			boolean allow = false;
+			for (String regex : resourceWhitelist) {
+				if (name.matches(regex)) {
+					allow = true;
+					break;
+				}
+			}
+			if (!allow) {
+				return urls;
+			}
+		}
+		if (resourceBlacklist != null && !resourceBlacklist.isEmpty()) {
+			boolean allow = true;
+			for (String regex : resourceBlacklist) {
+				if (name.matches(regex)) {
+					allow = false;
+					break;
+				}
+			}
+			if (!allow) {
+				return urls;
+			}
+		}
 		for (String fileName : findFiles(name, stopAfterFirst)) {
 			try {
 				urls.add(new URL(LocalClassLoader.class.getName() + "://" + getId() + "/" + fileName));
@@ -220,5 +245,20 @@ abstract public class LocalClassLoader extends ClassLoader {
 			return null;
 		}
 	}
-	
+
+	public List<String> getResourceWhitelist() {
+		return resourceWhitelist;
+	}
+
+	public void setResourceWhitelist(List<String> resourceWhitelist) {
+		this.resourceWhitelist = resourceWhitelist;
+	}
+
+	public List<String> getResourceBlacklist() {
+		return resourceBlacklist;
+	}
+
+	public void setResourceBlacklist(List<String> resourceBlacklist) {
+		this.resourceBlacklist = resourceBlacklist;
+	}
 }
