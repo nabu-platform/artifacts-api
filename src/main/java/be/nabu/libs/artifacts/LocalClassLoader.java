@@ -81,7 +81,7 @@ abstract public class LocalClassLoader extends ClassLoader {
 	
 	private Class<?> loadClass(String name, boolean resolve, boolean recurse) throws ClassFormatError, ClassNotFoundException {
 		// don't load system classes
-		if (name.startsWith("java.") || name.startsWith("com.sun.") || name.startsWith("sun.") || name.startsWith("javax.xml")) { // name.startsWith("javax.")
+		if (name.startsWith("java.") || (name.startsWith("com.sun.") && !name.startsWith("com.sun.jna")) || name.startsWith("sun.") || name.startsWith("javax.xml")) { // name.startsWith("javax.")
 			return recurse ? getParent().loadClass(name) : null;
 		}
 		synchronized (getClassLoadingLock(name)) {
