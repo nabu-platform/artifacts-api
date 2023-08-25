@@ -4,9 +4,11 @@ import java.io.IOException;
 
 public interface StartableArtifact extends Artifact {
 	public enum StartPhase {
+		FIRST,
 		EARLY,
 		NORMAL,
-		LATE
+		LATE,
+		LAST
 	}
 	
 	public void start() throws IOException;
