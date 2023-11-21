@@ -5,6 +5,7 @@ import java.io.IOException;
 public interface StartableArtifact extends Artifact {
 	public enum StartPhase {
 		FIRST,
+		SECOND,
 		EARLY,
 		NORMAL,
 		LATE,
