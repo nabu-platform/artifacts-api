@@ -32,7 +32,7 @@ public class ArtifactUtils {
 		while (matcher.find()) {
 			String todoContent = matcher.group(1);
 			todoContent = todoContent.trim();
-			TodoImpl todo = new TodoImpl();
+			Todo todo = new Todo();
 			todo.setId(id);
 			if (todoContent != null && !todoContent.isEmpty()) {
 				// check for tags
@@ -44,6 +44,10 @@ public class ArtifactUtils {
 				}
 				if (!todoContent.isEmpty()) {
 					todo.setTodo(todoContent);
+				}
+				// if we have an id, we assume it points to somewhere in the tree, we always add the "project" itself as a tag
+				if (id != null) {
+					tags.add(id.replaceAll("^([^.]+).*", "$1"));
 				}
 				todo.setTags(tags);
 			}
