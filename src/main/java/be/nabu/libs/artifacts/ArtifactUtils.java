@@ -32,9 +32,14 @@ public class ArtifactUtils {
 		while (matcher.find()) {
 			String todoContent = matcher.group(1);
 			todoContent = todoContent.trim();
+			// special case, you often type TODO: do this
+			// in that case, we don't want to include the ":"
 			Todo todo = new Todo();
 			todo.setId(id);
 			if (todoContent != null && !todoContent.isEmpty()) {
+				if (todoContent.indexOf(':') == 0) {
+					todoContent = todoContent.substring(1).trim();
+				}
 				// check for tags
 				Matcher matcherTag = patternTag.matcher(todoContent);
 				List<String> tags = new ArrayList<String>();
