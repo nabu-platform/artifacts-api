@@ -4,9 +4,15 @@ import java.io.IOException;
 
 public interface StartableArtifact extends Artifact {
 	public enum StartPhase {
+		// JDBC pools start up
 		FIRST,
+		// DDL sync
 		SECOND,
+		// deployment actions (usually DML sync)
+		THIRD,
+		// frameworks with listeners
 		EARLY,
+		// normal stuff
 		NORMAL,
 		LATE,
 		LAST
