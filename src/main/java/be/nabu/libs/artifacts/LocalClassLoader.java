@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import be.nabu.libs.artifacts.api.CheckableClassLoader;
+
 /**
  * This classloader achieves two purposes:
  * 
@@ -47,7 +49,7 @@ import java.util.UUID;
  * If we can not find it in this classloader, we ask the parent, who in turn will ask all the classloaders it knows, including this one
  * It will ask so in a non-recursive manner though so we don't get stuck in infinite recursion
  */
-abstract public class LocalClassLoader extends ClassLoader {
+abstract public class LocalClassLoader extends ClassLoader implements CheckableClassLoader {
 
 	private static boolean registered;
 	private List<String> resourceWhitelist, resourceBlacklist;
@@ -112,12 +114,16 @@ abstract public class LocalClassLoader extends ClassLoader {
 					synchronized(failed) {
 						failed.add(name);
 					}
-					// first search locally (allow different versions of shared libraries)
-					try {
-						clazz = findClass(name);
-					}
-					catch (ClassNotFoundException e) {
-						// not found, try parent
+					// only try to load the class if you have it
+					// by doing this we skip an unnecessary classnotfoundexception
+					if (hasClass(name)) {
+						// first search locally (allow different versions of shared libraries)
+						try {
+							clazz = findClass(name);
+						}
+						catch (ClassNotFoundException e) {
+							// not found, try parent
+						}
 					}
 					if (clazz == null && recurse) {
 						clazz = getParent().loadClass(name);
@@ -129,6 +135,11 @@ abstract public class LocalClassLoader extends ClassLoader {
 			}
 			return clazz;
 		}
+	}
+	
+	@Override
+	public boolean hasClass(String name) {
+		return !findFiles(name.replace('.', '/') + ".class", true).isEmpty();
 	}
 	
 	@Override
